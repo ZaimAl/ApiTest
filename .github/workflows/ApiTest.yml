@@ -1,0 +1,50 @@
+name: API Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  run-automation-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # download repo
+    - uses: actions/checkout@v3
+    
+    # setup java
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        
+    # install chrome browser
+    - name: Setup Chrome
+      uses: browser-actions/setup-chrome@v0.0.0
+      
+    # setup graldew
+    - name: Setup gradlew
+      run: chmod +x gradlew 
+      
+    # Execute gradle command for running cucumber test
+    - name: Execute Test
+      run: ./gradlew cucumber
+      
+    # Archive Test Result
+    - name: Archive Test Result
+      uses: actions/upload-artifact@v3.1.0
+      if: always()
+      with:
+        name: Cucumber Report
+        path: reports
+      
+    # Deploy to Github Pages
+    - name: Deploy report to Github Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v3.9.2
+      with:
+        PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PUBLISH_DIR: reports
